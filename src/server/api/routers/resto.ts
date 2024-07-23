@@ -1,6 +1,7 @@
 import axios from "axios";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { Place } from "~/types/Place";
 
 const API_KEY = process.env.GOOGLE_MAPS_API_KEY; // Store your API key in .env.local
 
@@ -27,7 +28,9 @@ export const restoRouter = createTRPCRouter({
           return axios.get(placeDetailsURL);
         });
         const placeDetailsResponse = await Promise.all(placeDetailsRequests);
-        const placeDetails = placeDetailsResponse.map((e) => e.data.result);
+        const placeDetails: Place[] = placeDetailsResponse.map(
+          (e) => e.data.result,
+        );
         return placeDetails;
       } catch (error) {
         console.log(error);
