@@ -43,7 +43,7 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-2xl text-white">
-            {!isLoading ? data[0]?.place_id : "Loading tRPC query..."}
+            {!isLoading && data ? data[0]?.place_id : "Loading tRPC query..."}
           </p>
         </div>
       </main>

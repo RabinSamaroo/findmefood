@@ -1,6 +1,6 @@
+import axios from "axios";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import axios from "axios";
 
 const API_KEY = process.env.GOOGLE_MAPS_API_KEY; // Store your API key in .env.local
 
@@ -17,22 +17,21 @@ export const restoRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const { lat, lng, radius, opennow } = input;
 
-      if (!lat || !lng || !radius) {
-        return { error: "Missing required parameters" };
-      }
-
-      let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=restaurant&key=${API_KEY}`;
-
-      if (opennow) {
-        url += `&opennow=true`;
-      }
+      const nearbySearchURL = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=restaurant&key=${API_KEY}&opennow=${opennow ? "true" : undefined}`;
 
       try {
-        const response = await axios.get(url);
+        const response = await axios.get(nearbySearchURL);
         const restaurants = response.data.results;
-        return restaurants;
+        const placeDetailsRequests = restaurants.map((e: any) => {
+          const placeDetailsURL = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${e.place_id}&key=${API_KEY}`;
+          return axios.get(placeDetailsURL);
+        });
+        const placeDetailsResponse = await Promise.all(placeDetailsRequests);
+        const placeDetails = placeDetailsResponse.map((e) => e.data.result);
+        return placeDetails;
       } catch (error) {
-        return { error: "Error with Google Maps API" };
+        console.log(error);
+        return;
       }
     }),
 });
